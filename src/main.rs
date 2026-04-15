@@ -1,31 +1,13 @@
-// GAME overview
-
-// Player starts the game.
-
-// Player is given a word with empty letters.
-
-// Player types in a letter in attempt to guess the word.
-
-// Player is given ten attempts to guess the word.
-
-// For every guess either wrong or right, the remaining guesses are reduced by one.
-
-// To make things harder, If the player guesses an already guessed letter, the remaining guesses are reduced by one.
-
-// If players guesses all the letters correctly before the guesses are exhausted, the player wins else the player loses.
-
-// Program ends, start again from the beginning.
-
-use rand::rng;
+// Import random number generation utilities for selecting random words
 use rand::prelude::IndexedRandom;
+use rand::rng;
+// Import standard input/output for user interaction
 use std::io;
 #[allow(dead_code)]
 
-
-
-
+/// Main entry point for the Hangman game application
 fn main() {
-    struct  PlayerRoot {
+    struct PlayerRoot {
         word: String,
         no_of_guesses: i8,
         available_alphabates: Vec<char>,
@@ -42,11 +24,8 @@ fn main() {
     }
 
     impl PlayerRoot {
-
-//fn new(...) -> PlayerRoot
-// This is a constructor function
-// It returns a PlayerRoot object
-
+        /// Constructor function to create a new PlayerRoot instance
+        /// Returns a PlayerRoot object initialized with provided values
         fn new(
             word: &str,
             no_of_guesses: i8,
@@ -57,19 +36,28 @@ fn main() {
             guess: String,
             correct_guesses: Vec<char>,
         ) -> PlayerRoot {
-            PlayerRoot { word: String::from(word), no_of_guesses, available_alphabates, list_of_words_to_guess_from, output_string, max_tries: max, guess, correct_guesses }
+            PlayerRoot {
+                word: String::from(word),
+                no_of_guesses,
+                available_alphabates,
+                list_of_words_to_guess_from,
+                output_string,
+                max_tries: max,
+                guess,
+                correct_guesses,
+            }
         }
 
+        /// Generates a random word from the provided list
         fn generate_random_words(list: &Vec<String>) -> String {
-            let mut rng = rng();
-            let word = list.choose(&mut rng).unwrap();
-            word.to_string()
-
+            let mut rng = rng();                    // Initialize random number generator
+            let word = list.choose(&mut rng).unwrap(); // Select random word from list
+            word.to_string()                        // Convert to String and return
         }
     }
 
-    // list of words for the game
-
+    // ============ GAME INITIALIZATION ============
+    // Define the list of words that players will guess from
     let list_of_words = vec![
         "hunting".to_string(),
         "dizzy".to_string(),
@@ -86,13 +74,15 @@ fn main() {
         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     ];
 
+    // Initialize list of guessed characters
     let guess_chars = vec!['_'];
 
-    // for our simple UI
+    // Convert the random word to a character vector for easier manipulation
     let guess_vec: Vec<char> = random_word.clone().chars().collect();
+    // Create initial display with blanks (underscores) for each letter
     let output_string_vec = vec!['_'; guess_vec.len()];
 
-    let mut player_one =   PlayerRoot::new(
+    let mut player_one: PlayerRoot = PlayerRoot::new(
         &random_word,
         0,
         letters,
@@ -103,50 +93,57 @@ fn main() {
         guess_chars,
     );
 
+    // Display welcome message and initial game state
     println!("Welcome to the hangman game built with rust!, please enter a letter");
     println!(
         "Fill in the blank spaces{:?}, no of guesses made {:?}, no of max tries {:?}",
         player_one.output_string, player_one.no_of_guesses, player_one.max_tries
     );
 
+    // ============ MAIN GAME LOOP ============
     loop {
-        //Takes in an input
-        //Todo Check if input is more than one char
-
+        // Get user input for the guessed letter
+        // TODO: Validate that input is exactly one character
         let mut guess = String::from("");
+        // Read the user's input from standard input
         io::stdin()
             .read_line(&mut guess)
             .expect("Failed to read line");
+        
+        // Convert input string to a single character, or '0' if invalid
         let altered_guess: char = match guess.trim().chars().next() {
             Some(val) => val,
             _ => {
                 println!("NO letter inputted, type a letter!!");
-                '0'
+                '0'  // Placeholder for invalid input
             }
         };
 
-
-
-        // check if guess is valid
+        // Check if the letter hasn't been guessed before
 
         if !player_one.output_string.contains(&altered_guess) {
+            // Increment the guess counter
             player_one.no_of_guesses += 1;
 
+            // Check if the guessed letter is NOT in the word (incorrect guess)
             if !player_one.word.contains(altered_guess) {
                 let guess_score = player_one.max_tries - player_one.no_of_guesses;
                 println!(
                     "Wrong guess\nFIll inthe blank spaces{:?} no of guesses remaining {:?}",
                     player_one.output_string, guess_score
                 );
-
             }
 
-            // loop through the word , check it the guess is correct,reduce number of guess by one
+            // Search through the word and reveal all matching letters
             for n in player_one.word.char_indices() {
+                // Check if current character matches the guessed letter
                 if n.1 == altered_guess {
+                    // Calculate remaining guesses
                     let guess_score = player_one.max_tries - player_one.no_of_guesses;
 
+                    // Add the correct guess to the list of correct guesses
                     player_one.correct_guesses.push(n.1);
+                    // Reveal the guessed letter at its position in output
                     player_one.output_string[n.0] = n.1;
 
                     println!(
@@ -154,17 +151,16 @@ fn main() {
                         player_one.output_string, guess_score
                     );
                 }
-
             }
         } else {
+            // Letter has already been guessed
             println!("That letter is Taken !!! guess again")
         }
 
+        // Check if the player has guessed all letters in the word (win condition)
         if player_one.correct_guesses.len() == guess_vec.len() {
-        print!("You Win!!");
-        break;
+            print!("You Win!!");
+            break;  // Exit the game loop
+        }
     }
-    }
-    
-
 }
